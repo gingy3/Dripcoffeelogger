@@ -19,7 +19,7 @@ async function handleStart(bot, msg) {
     msg.chat.id,
     `☕ *Hey ${name}, welcome to BrewLog!*\n\n` +
     `I help you figure out what kind of coffee you actually like.\n\n` +
-    `Log what you drink, and after *10 entries* I'll build your personal taste profile — ` +
+    `Log what you drink, and after *5 entries* I'll build your personal taste profile — ` +
     `a plain-English description you can use next time you're buying beans.\n\n` +
     `*Commands:*\n` +
     `/log — Log a coffee\n` +

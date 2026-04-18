@@ -36,7 +36,7 @@ const BODY_NOTES = Object.freeze(['Light', 'Smooth', 'Rich']);
 const QUALIFYING_RATING = 3;
 
 /** Number of qualifying logs needed to unlock a profile. */
-const PROFILE_THRESHOLD = 10;
+const PROFILE_THRESHOLD = 5;
 
 module.exports = {
   STEPS,
