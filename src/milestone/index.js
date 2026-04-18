@@ -39,13 +39,14 @@ function msgMilestone(firstName, profile) {
     `*You tend to enjoy:*\n` +
     `${flavorList}\n\n` +
 
-    `*Try this when buying beans:*\n` +
-    `_"${profile.keywordChain}"_\n\n` +
-
     `━━━━━━━━━━━━━━━━━\n` +
     `Use /profile any time to see this again.\n` +
     `Keep logging to sharpen it further.`
   );
+}
+
+function msgBuyingTip(keywordChain) {
+  return `*Use this when buying beans:*\n_"${keywordChain}"_`;
 }
 
 // ─── Main function ────────────────────────────────────────────────────────────
@@ -62,8 +63,9 @@ function msgMilestone(firstName, profile) {
  *
  * @param {number} userId
  * @returns {{
- *   message:  string,   the text to send
- *   milestone: boolean  true if this is the unlock event
+ *   message:   string,      the text to send
+ *   milestone: boolean,     true if this is the unlock event
+ *   buyingTip: string|null  buying-tip message, only set on milestone unlock
  * }}
  */
 function checkMilestone(userId) {
@@ -72,7 +74,7 @@ function checkMilestone(userId) {
   // Not yet at threshold — return a plain progress confirmation
   if (count < PROFILE_THRESHOLD) {
     const remaining = PROFILE_THRESHOLD - count;
-    return { message: msgConfirmation(count, remaining), milestone: false };
+    return { message: msgConfirmation(count, remaining), milestone: false, buyingTip: null };
   }
 
   // At or past threshold — attempt the atomic unlock
@@ -80,7 +82,7 @@ function checkMilestone(userId) {
 
   if (!justUnlocked) {
     // Profile already unlocked on a previous log — just confirm
-    return { message: msgConfirmation(count, 0), milestone: false };
+    return { message: msgConfirmation(count, 0), milestone: false, buyingTip: null };
   }
 
   // First time crossing the threshold — generate and return the milestone message
@@ -88,7 +90,7 @@ function checkMilestone(userId) {
   const firstName = (user?.first_name?.trim()) || 'friend';
   const profile   = generateProfile(rows);
 
-  return { message: msgMilestone(firstName, profile), milestone: true };
+  return { message: msgMilestone(firstName, profile), milestone: true, buyingTip: msgBuyingTip(profile.keywordChain) };
 }
 
-module.exports = { checkMilestone, msgConfirmation, msgMilestone };
+module.exports = { checkMilestone, msgConfirmation, msgMilestone, msgBuyingTip };

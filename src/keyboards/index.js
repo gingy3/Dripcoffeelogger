@@ -94,10 +94,19 @@ function ratingKeyboard() {
   };
 }
 
+function logAnotherKeyboard() {
+  return {
+    inline_keyboard: [[
+      { text: 'Log another ☕', callback_data: 'la:yes' },
+    ]],
+  };
+}
+
 module.exports = {
   primaryFlavorsKeyboard,
   fruitySubnoteKeyboard,
   bodyNoteKeyboard,
   optionalNoteKeyboard,
   ratingKeyboard,
+  logAnotherKeyboard,
 };

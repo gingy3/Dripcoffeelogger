@@ -2,6 +2,7 @@ const { getQualifyingLogs, countAllLogs } = require('../db/logs');
 const { getUserById }                     = require('../db/users');
 const { generateProfile }                 = require('../profiling');
 const { PROFILE_THRESHOLD }               = require('../state/constants');
+const { msgBuyingTip }                    = require('../milestone');
 
 // ─── Message builders ─────────────────────────────────────────────────────────
 
@@ -22,9 +23,7 @@ function msgProfile(firstName, profile) {
     `☕ *${firstName}'s Taste Profile*\n\n` +
     `*Type:* ${profile.tasteType}\n\n` +
     `*You tend to enjoy:*\n${flavorList}\n\n` +
-    `*Mouthfeel:* ${profile.dominantBody}\n\n` +
-    `*Use this when buying beans:*\n` +
-    `_"${profile.keywordChain}"_`
+    `*Mouthfeel:* ${profile.dominantBody}`
   );
 }
 
@@ -58,7 +57,11 @@ async function handleProfile(bot, msg) {
   const firstName = (user?.first_name?.trim()) || 'You';
   const profile   = generateProfile(rows);
 
-  return bot.sendMessage(chatId, msgProfile(firstName, profile), {
+  await bot.sendMessage(chatId, msgProfile(firstName, profile), {
+    parse_mode: 'Markdown',
+  });
+
+  await bot.sendMessage(chatId, msgBuyingTip(profile.keywordChain), {
     parse_mode: 'Markdown',
   });
 }

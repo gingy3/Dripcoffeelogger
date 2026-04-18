@@ -11,18 +11,18 @@ const { primaryFlavorsKeyboard, optionalNoteKeyboard } = require('../keyboards')
  * @param {TelegramBot} bot
  * @param {Message}     msg
  */
-async function handleLogCommand(bot, msg) {
-  const userId    = msg.from.id;
-  const firstName = msg.from.first_name;
-
-  upsertUser(userId, firstName);
+async function handleLogStart(bot, userId, chatId) {
   createSession(userId);
-
   await bot.sendMessage(
-    msg.chat.id,
+    chatId,
     `☕ *What coffee did you drink?*\n\nType the bean name or brand:`,
     { parse_mode: 'Markdown' },
   );
+}
+
+async function handleLogCommand(bot, msg) {
+  upsertUser(msg.from.id, msg.from.first_name);
+  await handleLogStart(bot, msg.from.id, msg.chat.id);
 }
 
 /**
@@ -100,4 +100,4 @@ async function handleTextInput(bot, msg) {
   return true;
 }
 
-module.exports = { handleLogCommand, handleTextInput };
+module.exports = { handleLogCommand, handleTextInput, handleLogStart };

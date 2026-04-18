@@ -18,10 +18,12 @@ const {
   bodyNoteKeyboard,
   optionalNoteKeyboard,
   ratingKeyboard,
+  logAnotherKeyboard,
 } = require('../keyboards');
 
-const { insertLog }      = require('../db/logs');
-const { checkMilestone } = require('../milestone');   // pure: returns { message, milestone }
+const { insertLog }        = require('../db/logs');
+const { checkMilestone }   = require('../milestone');
+const { handleLogStart }   = require('./log');
 
 /**
  * Central handler for all callback_query events.
@@ -40,9 +42,15 @@ async function handleCallback(bot, query) {
   const messageId = query.message.message_id;
   const data      = query.data;
 
-  const session = getSession(userId);
-
   await bot.answerCallbackQuery(query.id);
+
+  // "Log another?" — valid even without an active session
+  if (data === 'la:yes') {
+    await handleLogAnother(bot, userId, chatId, messageId);
+    return;
+  }
+
+  const session = getSession(userId);
 
   if (!session) {
     await bot.sendMessage(chatId, `No active logging session. Use /log to start.`);
@@ -133,8 +141,24 @@ async function handleRating(bot, userId, chatId, rating) {
   insertLog(userId, session.data);
   clearSession(userId);
 
-  const { message } = checkMilestone(userId);
-  await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  const { message, buyingTip } = checkMilestone(userId);
+
+  await bot.sendMessage(chatId, message, {
+    parse_mode:   'Markdown',
+    reply_markup: logAnotherKeyboard(),
+  });
+
+  if (buyingTip) {
+    await bot.sendMessage(chatId, buyingTip, { parse_mode: 'Markdown' });
+  }
+}
+
+async function handleLogAnother(bot, userId, chatId, messageId) {
+  await bot.editMessageReplyMarkup(
+    { inline_keyboard: [] },
+    { chat_id: chatId, message_id: messageId },
+  ).catch(() => {});
+  await handleLogStart(bot, userId, chatId);
 }
 
 // ─── Shared prompt helpers ────────────────────────────────────────────────────
