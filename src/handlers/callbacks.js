@@ -53,7 +53,6 @@ async function handleCallback(bot, query) {
   const session = getSession(userId);
 
   if (!session) {
-    await bot.sendMessage(chatId, `No active logging session. Use /log to start.`);
     return;
   }
 
@@ -67,11 +66,11 @@ async function handleCallback(bot, query) {
     } else if (data === 'on:skip') {
       await handleOptionalNoteSkip(bot, userId, chatId);
     } else if (data.startsWith('rt:')) {
-      await handleRating(bot, userId, chatId, parseInt(data.slice(3), 10));
+      await handleRating(bot, userId, chatId, messageId, parseInt(data.slice(3), 10));
     }
   } catch (err) {
     if (err instanceof SessionError) {
-      await bot.sendMessage(chatId, `⚠️ ${err.message}`);
+      console.warn('[callback] SessionError (stale button?):', err.message);
     } else {
       console.error('[callback] Unexpected error:', err);
       await bot.sendMessage(chatId, `Something went wrong. Please try /log again.`);
@@ -135,11 +134,16 @@ async function handleOptionalNoteSkip(bot, userId, chatId) {
  * Final step. Saves the log, then delegates entirely to checkMilestone()
  * for the confirmation message. No confirmation logic lives here.
  */
-async function handleRating(bot, userId, chatId, rating) {
+async function handleRating(bot, userId, chatId, messageId, rating) {
   const session = setRating(userId, rating);
 
   insertLog(userId, session.data);
   clearSession(userId);
+
+  await bot.editMessageReplyMarkup(
+    { inline_keyboard: [] },
+    { chat_id: chatId, message_id: messageId },
+  ).catch(() => {});
 
   const { message, buyingTip } = checkMilestone(userId);
 
