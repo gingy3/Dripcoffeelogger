@@ -25,9 +25,10 @@ function formatEntry(log) {
   const sub     = log.sub_notes.length > 0 ? ` (${log.sub_notes.join(', ')})` : '';
   const body    = log.body_note ? ` · ${log.body_note}` : '';
   const stars   = '⭐'.repeat(log.rating);
+  const note    = log.note ? `\n📝 _${escMd(log.note)}_` : '';
   const date    = formatDate(log.created_at);
 
-  return `*${escMd(log.bean_name)}*\n${flavors}${sub}${body} · ${stars}\n${date}`;
+  return `*${escMd(log.bean_name)}*\n${flavors}${sub}${body} · ${stars}${note}\n${date}`;
 }
 
 /**
