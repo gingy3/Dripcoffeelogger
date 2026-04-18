@@ -24,8 +24,8 @@ function formatEntry(log) {
     stars,
     bodyLine,
     log.note ? escMd(log.note) : null,
-    formatDate(log.created_at),
   ].filter(Boolean);
+  lines.push('', formatDate(log.created_at));
 
   return lines.join('\n');
 }
