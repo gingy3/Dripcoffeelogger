@@ -23,10 +23,10 @@ console.log('🤖  BrewLog Bot is running...');
 
 // ─── Command handlers ─────────────────────────────────────────────────────────
 
-bot.onText(/\/start/, (msg) => handleStart(bot, msg));
-bot.onText(/\/log/,   (msg) => handleLogCommand(bot, msg));
-bot.onText(/\/profile/, (msg) => handleProfile(bot, msg));
-bot.onText(/\/history/, (msg) => handleHistory(bot, msg));
+bot.onText(/^\/start/, (msg) => handleStart(bot, msg));
+bot.onText(/^\/log/,   (msg) => handleLogCommand(bot, msg));
+bot.onText(/^\/profile/, (msg) => handleProfile(bot, msg));
+bot.onText(/^\/history/, (msg) => handleHistory(bot, msg));
 
 // ─── Inline button handler ────────────────────────────────────────────────────
 
