@@ -9,21 +9,21 @@ function formatDate(createdAt) {
   return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function escHtml(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function escMd(str) {
+  return String(str).replace(/[*_]/g, '\\$&');
 }
 
 function formatEntry(log) {
-  const flavors = log.primary_flavors.join(', ');
-  const sub     = log.sub_notes.length > 0 ? ` (${log.sub_notes.join(', ')})` : '';
-  const stars   = '⭐'.repeat(log.rating);
+  const flavors  = log.primary_flavors.join(', ');
+  const sub      = log.sub_notes.length > 0 ? ` (${log.sub_notes.join(', ')})` : '';
+  const bodyLine = log.body_note ? `${flavors}${sub} · ${log.body_note}` : `${flavors}${sub}`;
+  const stars    = '⭐'.repeat(log.rating);
 
   const lines = [
-    `<b><u>${escHtml(log.bean_name)}</u></b>`,
-    `${flavors}${sub}`,
+    `*${escMd(log.bean_name)}*`,
     stars,
-    log.body_note  || null,
-    log.note       ? escHtml(log.note) : null,
+    bodyLine,
+    log.note ? escMd(log.note) : null,
     formatDate(log.created_at),
   ].filter(Boolean);
 
@@ -32,10 +32,10 @@ function formatEntry(log) {
 
 function msgHistory(logs, totalCount) {
   if (logs.length === 0) {
-    return `📋 <b>No logs yet.</b>\n\nUse /log to record your first coffee.`;
+    return `📋 *No logs yet.*\n\nUse /log to record your first coffee.`;
   }
 
-  const header  = `📋 <b>Last ${logs.length} of ${totalCount} log${totalCount === 1 ? '' : 's'}</b>`;
+  const header  = `📋 *Last ${logs.length} of ${totalCount} log${totalCount === 1 ? '' : 's'}*`;
   const divider = '─────────────────';
   const entries = logs.map(formatEntry).join(`\n${divider}\n`);
 
@@ -50,7 +50,7 @@ async function handleHistory(bot, msg) {
   const totalCount = countAllLogs(userId);
 
   await bot.sendMessage(msg.chat.id, msgHistory(logs, totalCount), {
-    parse_mode: 'HTML',
+    parse_mode: 'Markdown',
   });
 }
 
