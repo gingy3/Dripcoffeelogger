@@ -1,0 +1,6 @@
+[deploy]
+startCommand = "npm start"
+
+[[volumes]]
+mountPath = "/data"
+name = "brewlog-data"
