@@ -1,53 +1,80 @@
-const pool = require('./connection');
+const db = require('./connection');
 
-async function insertLog(userId, entry) {
-  await pool.query(
-    `INSERT INTO logs (user_id, bean_name, primary_flavors, sub_notes, body_note, note, rating)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [
-      userId,
-      entry.bean_name,
-      JSON.stringify(entry.primary_flavors),
-      JSON.stringify(entry.sub_notes),
-      entry.body_note,
-      entry.note ?? null,
-      entry.rating,
-    ],
+/**
+ * Persist a completed log entry.
+ *
+ * @param {number} userId
+ * @param {{
+ *   bean_name:       string,
+ *   primary_flavors: string[],
+ *   sub_notes:       string[],
+ *   body_note:       string,
+ *   note:            string | null,
+ *   rating:          number
+ * }} entry
+ */
+function insertLog(userId, entry) {
+  db.prepare(`
+    INSERT INTO logs (user_id, bean_name, primary_flavors, sub_notes, body_note, note, rating)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    userId,
+    entry.bean_name,
+    JSON.stringify(entry.primary_flavors),
+    JSON.stringify(entry.sub_notes),
+    entry.body_note,
+    entry.note ?? null,
+    entry.rating,
   );
 }
 
-async function getLogsByUser(userId) {
-  const result = await pool.query(
-    `SELECT * FROM logs WHERE user_id = $1 ORDER BY created_at ASC`,
-    [userId],
-  );
-  return result.rows.map(parseFlavors);
+/**
+ * All logs for a user, oldest first.
+ *
+ * @param {number} userId
+ * @returns {Array}
+ */
+function getLogsByUser(userId) {
+  const rows = db.prepare(`
+    SELECT * FROM logs WHERE user_id = ? ORDER BY created_at ASC
+  `).all(userId);
+  return rows.map(parseFlavors);
 }
 
-async function getQualifyingLogs(userId) {
-  const result = await pool.query(
-    `SELECT * FROM logs WHERE user_id = $1 AND rating >= 3 ORDER BY created_at ASC`,
-    [userId],
-  );
-  const rows = result.rows.map(parseFlavors);
+/**
+ * Qualifying logs: rating >= 3, oldest first.
+ * Returns both the full rows and a pre-computed count so callers
+ * never need a separate COUNT query.
+ *
+ * @param {number} userId
+ * @returns {{ rows: Array, count: number }}
+ */
+function getQualifyingLogs(userId) {
+  const rows = db.prepare(`
+    SELECT *
+    FROM   logs
+    WHERE  user_id = ?
+      AND  rating  >= 3
+    ORDER  BY created_at ASC
+  `).all(userId).map(parseFlavors);
+
   return { rows, count: rows.length };
 }
 
-async function countAllLogs(userId) {
-  const result = await pool.query(
-    `SELECT COUNT(*) AS count FROM logs WHERE user_id = $1`,
-    [userId],
-  );
-  return parseInt(result.rows[0].count, 10);
+/**
+ * Total log count for a user (for display purposes).
+ *
+ * @param {number} userId
+ * @returns {number}
+ */
+function countAllLogs(userId) {
+  const row = db.prepare(`
+    SELECT COUNT(*) as count FROM logs WHERE user_id = ?
+  `).get(userId);
+  return row.count;
 }
 
-async function getRecentLogs(userId, limit = 10) {
-  const result = await pool.query(
-    `SELECT * FROM logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`,
-    [userId, limit],
-  );
-  return result.rows.map(parseFlavors);
-}
+// ─── Internal helpers ─────────────────────────────────────────────────────────
 
 function parseFlavors(row) {
   return {
@@ -58,3 +85,22 @@ function parseFlavors(row) {
 }
 
 module.exports = { insertLog, getLogsByUser, getQualifyingLogs, countAllLogs, getRecentLogs };
+
+/**
+ * Most recent logs for a user, newest first.
+ *
+ * @param {number} userId
+ * @param {number} limit  default 10
+ * @returns {Array}
+ */
+function getRecentLogs(userId, limit = 10) {
+  const rows = db.prepare(`
+    SELECT *
+    FROM   logs
+    WHERE  user_id = ?
+    ORDER  BY created_at DESC
+    LIMIT  ?
+  `).all(userId, limit).map(parseFlavors);
+
+  return rows;
+}

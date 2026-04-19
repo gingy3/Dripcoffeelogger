@@ -11,7 +11,7 @@ async function handleStart(bot, msg) {
   const userId    = msg.from.id;
   const firstName = msg.from.first_name;
 
-  await upsertUser(userId, firstName);
+  upsertUser(userId, firstName);
 
   const name = (firstName && firstName.trim()) || 'there';
 

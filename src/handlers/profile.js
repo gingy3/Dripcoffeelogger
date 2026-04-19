@@ -43,17 +43,17 @@ async function handleProfile(bot, msg) {
   const userId = msg.from.id;
   const chatId = msg.chat.id;
 
-  const { rows, count } = await getQualifyingLogs(userId);
+  const { rows, count } = getQualifyingLogs(userId);
 
   if (count < PROFILE_THRESHOLD) {
     const remaining  = PROFILE_THRESHOLD - count;
-    const totalCount = await countAllLogs(userId);
+    const totalCount = countAllLogs(userId);
     return bot.sendMessage(chatId, msgNotReady(count, remaining, totalCount), {
       parse_mode: 'Markdown',
     });
   }
 
-  const user      = await getUserById(userId);
+  const user      = getUserById(userId);
   const firstName = (user?.first_name?.trim()) || 'You';
   const profile   = generateProfile(rows);
 

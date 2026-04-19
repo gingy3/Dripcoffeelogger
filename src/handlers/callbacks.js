@@ -137,7 +137,7 @@ async function handleOptionalNoteSkip(bot, userId, chatId) {
 async function handleRating(bot, userId, chatId, messageId, rating) {
   const session = setRating(userId, rating);
 
-  await insertLog(userId, session.data);
+  insertLog(userId, session.data);
   clearSession(userId);
 
   await bot.editMessageReplyMarkup(
@@ -145,7 +145,7 @@ async function handleRating(bot, userId, chatId, messageId, rating) {
     { chat_id: chatId, message_id: messageId },
   ).catch(() => {});
 
-  const { message, buyingTip } = await checkMilestone(userId);
+  const { message, buyingTip } = checkMilestone(userId);
 
   await bot.sendMessage(chatId, message, {
     parse_mode:   'Markdown',
