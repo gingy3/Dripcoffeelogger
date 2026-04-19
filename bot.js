@@ -5,8 +5,8 @@ const { initSchema }        = require('./src/db/schema');
 const { handleStart }       = require('./src/handlers/start');
 const { handleLogCommand, handleTextInput } = require('./src/handlers/log');
 const { handleCallback }    = require('./src/handlers/callbacks');
-const { handleProfile } = require('./src/handlers/profile');
-const { handleHistory } = require('./src/handlers/history');
+const { handleProfile }     = require('./src/handlers/profile');
+const { handleHistory }     = require('./src/handlers/history');
 
 // ─── Startup ──────────────────────────────────────────────────────────────────
 
@@ -16,38 +16,40 @@ if (!token) {
   process.exit(1);
 }
 
-initSchema();
+initSchema()
+  .then(() => {
+    const bot = new TelegramBot(token, { polling: true });
+    console.log('🤖  BrewLog Bot is running...');
 
-const bot = new TelegramBot(token, { polling: true });
-console.log('🤖  BrewLog Bot is running...');
+    // ─── Command handlers ─────────────────────────────────────────────────────
 
-// ─── Command handlers ─────────────────────────────────────────────────────────
+    bot.onText(/^\/start/,   (msg) => handleStart(bot, msg));
+    bot.onText(/^\/log/,     (msg) => handleLogCommand(bot, msg));
+    bot.onText(/^\/profile/, (msg) => handleProfile(bot, msg));
+    bot.onText(/^\/history/, (msg) => handleHistory(bot, msg));
 
-bot.onText(/^\/start/, (msg) => handleStart(bot, msg));
-bot.onText(/^\/log/,   (msg) => handleLogCommand(bot, msg));
-bot.onText(/^\/profile/, (msg) => handleProfile(bot, msg));
-bot.onText(/^\/history/, (msg) => handleHistory(bot, msg));
+    // ─── Inline button handler ────────────────────────────────────────────────
 
-// ─── Inline button handler ────────────────────────────────────────────────────
+    bot.on('callback_query', (query) => handleCallback(bot, query));
 
-bot.on('callback_query', (query) => handleCallback(bot, query));
+    // ─── Free-text message handler ────────────────────────────────────────────
 
-// ─── Free-text message handler ────────────────────────────────────────────────
+    bot.on('message', async (msg) => {
+      if (msg.text && msg.text.startsWith('/')) return;
+      if (!msg.text) return;
+      await handleTextInput(bot, msg);
+    });
 
-bot.on('message', async (msg) => {
-  // Ignore commands — already handled above
-  if (msg.text && msg.text.startsWith('/')) return;
-  // Ignore non-text messages (photos, stickers, etc.)
-  if (!msg.text) return;
+    // ─── Error handling ───────────────────────────────────────────────────────
 
-  await handleTextInput(bot, msg);
-});
-
-// ─── Error handling ───────────────────────────────────────────────────────────
-
-bot.on('polling_error', (err) => {
-  console.error('[polling_error]', err.message);
-});
+    bot.on('polling_error', (err) => {
+      console.error('[polling_error]', err.message);
+    });
+  })
+  .catch((err) => {
+    console.error('❌  Failed to initialise database:', err);
+    process.exit(1);
+  });
 
 process.on('unhandledRejection', (reason) => {
   console.error('[unhandledRejection]', reason);

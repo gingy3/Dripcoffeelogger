@@ -46,8 +46,8 @@ function msgHistory(logs, totalCount) {
 
 async function handleHistory(bot, msg) {
   const userId     = msg.from.id;
-  const logs       = getRecentLogs(userId, 10);
-  const totalCount = countAllLogs(userId);
+  const logs       = await getRecentLogs(userId, 10);
+  const totalCount = await countAllLogs(userId);
 
   await bot.sendMessage(msg.chat.id, msgHistory(logs, totalCount), {
     parse_mode: 'Markdown',

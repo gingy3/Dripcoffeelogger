@@ -21,7 +21,7 @@ async function handleLogStart(bot, userId, chatId) {
 }
 
 async function handleLogCommand(bot, msg) {
-  upsertUser(msg.from.id, msg.from.first_name);
+  await upsertUser(msg.from.id, msg.from.first_name);
   await handleLogStart(bot, msg.from.id, msg.chat.id);
 }
 
